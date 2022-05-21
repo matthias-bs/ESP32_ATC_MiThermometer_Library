@@ -28,7 +28,7 @@
 #define NO_OF_SENSORS 2
 
 // BLE adresses of known sensors 
-std::string knownBLEAddresses[] = {"a4:c1:38:b8:1f:7f", "a4:c1:38:bf:e1:bc", ""};
+std::string knownBLEAddresses[] = {"a4:c1:38:11:22:33", "a4:c1:38:44:55:66", ""};
 
 #include "src/ATC_MiThermometer.h"
 #include <string>
