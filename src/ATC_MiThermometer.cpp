@@ -1,8 +1,8 @@
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 // ATC_MiThermometer.cpp
 //
-// Bresser 5-in-1/6-in-1 868 MHz Weather Sensor Radio Receiver 
-// based on CC1101 or SX1276/RFM95W and ESP32/ESP8266
+// Bluetooth low energy thermometer/hygrometer sensor library for ESP32.
+// For sensors running ATC_MiThermometer firmware (see https://github.com/pvvx/ATC_MiThermometer)
 //
 // https://github.com/matthias-bs/ESP32_ATC_MiThermometer_Library
 //
@@ -42,13 +42,12 @@
 // 20220527 Changed to a class/into a library
 //
 // ToDo: 
-// - Pass list of known sensor's addresses to object
+// -
 //
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 
 #include "ATC_MiThermometer.h"
 
-//extern std::string knownBLEAddresses[];
 
 // Callback for advertised device found during scan
 class MyAdvertisedDeviceCallbacks: public BLEAdvertisedDeviceCallbacks {
@@ -58,42 +57,45 @@ class MyAdvertisedDeviceCallbacks: public BLEAdvertisedDeviceCallbacks {
             char buff[20];
             int datalen;
 
-            //Serial.printf(">>>> ServiceDataUUID 0x");
             datalen = (*advertisedDevice.getServiceDataUUID().getNative()).len;
             memcpy(buff, &(*advertisedDevice.getServiceDataUUID().getNative()).uuid, datalen);
             //Serial.printf("UUID Len  %d \n", (*advertisedDevice.getServiceDataUUID().getNative()).len);
             //Serial.printf("Service Data UUID length %d\n", datalen);
-            #ifdef DEBUG
-                for (int i = 0; i < datalen; i++) {
-                    Serial.printf("%0x", buff[i]);
-                }
-                Serial.println();
-            #endif
-            char tempUUID[] = { 0x1a, 0x18, 0x0} ;
-        
-            if ( strncmp( buff, tempUUID, datalen) == 0 ) {
+            DEBUG_PRINT(">>>> ServiceDataUUID 0x");
+            for (int i = 0; i < datalen; i++) {
+                DEBUG_PRINT((buff[i] < 16) ? "0" : "");
+                DEBUG_PRINT(buff[i], HEX);
+            }
+            DEBUG_PRINTLN();
+            
+            // Gets full length
+            //DEBUG_PRINT(">>>> ServiceDataUUID 0x");
+            //DEBUG_PRINT(advertisedDevice.getServiceDataUUID().toString().c_str());
+            
+            if (BLEUUID((uint16_t)0x181a).equals(advertisedDevice.getServiceDataUUID())) {
                 datalen = advertisedDevice.getServiceData().length();
                 memcpy(buff, advertisedDevice.getServiceData().c_str(), datalen);
-                #ifdef DEBUG
-                    Serial.println("Found a ServiceDataUUID for Temperature");
-                    Serial.printf(">>>>  Service Data ");
-                    for (int i = 0; i < datalen; i++) {
-                        //Serial.printf("%02.2x  ", buff[i]);
-                        Serial.printf("%0x ",advertisedDevice.getServiceData().c_str()[i]);
-                    }
+                DEBUG_PRINTLN("Found a ServiceDataUUID for Temperature");
+                DEBUG_PRINT(">>>>  Service Data ");
+                for (int i = 0; i < datalen; i++) {
+                    DEBUG_PRINT((advertisedDevice.getServiceData().c_str()[i] < 16) ? "0x0" : "0x");
+                    DEBUG_PRINT(advertisedDevice.getServiceData().c_str()[i], HEX);
+                    DEBUG_PRINT(" ");
+                }
+                DEBUG_PRINTLN();
 
-                    if (advertisedDevice.haveName()) {
-                        Serial.printf("Name: %s\n", advertisedDevice.getName().c_str());
-                    }
-                    if (advertisedDevice.haveManufacturerData()) {
-                        Serial.printf("Manufacturer Data: %s\n", advertisedDevice.getManufacturerData().c_str());
-                    }
-                    Serial.printf("Device Address: %s\n", advertisedDevice.getAddress().toString().c_str());
-               #endif
+                if (advertisedDevice.haveName()) {
+                    DEBUG_PRINT("Name: ");
+                    DEBUG_PRINTLN(advertisedDevice.getName().c_str());
+                }
+                if (advertisedDevice.haveManufacturerData()) {
+                    DEBUG_PRINT("Manufacturer Data: ");
+                    DEBUG_PRINTLN(advertisedDevice.getManufacturerData().c_str());
+                }
+                DEBUG_PRINT("Device Address: ");
+                DEBUG_PRINTLN(advertisedDevice.getAddress().toString().c_str());
            } else {
-               #ifdef DEBUG
-                   Serial.println(" ServiceDataUUID doesn't match");
-               #endif
+                DEBUG_PRINTLN("ServiceDataUUID doesn't match");
            }
         } // if (advertisedDevice.haveServiceData())
     } // void onResult(BLEAdvertisedDevice advertisedDevice)
@@ -111,21 +113,30 @@ void ATC_MiThermometer::begin(void)
     _pBLEScan->setWindow(99);  // less or equal setInterval value
 }
 
+
+// Get sensor data by running BLE device scan
 unsigned ATC_MiThermometer::getData(uint32_t duration) {
     BLEScanResults foundDevices = _pBLEScan->start(duration, false /* is_continue */);
-
+    
+    DEBUG_PRINTLN("Assigning scan results...");
+    
     // Known bug in Arduino BLE library - fix available:
     // "ESP32 BLE scan, example works but devices found is always 0"
     // https://forum.arduino.cc/t/esp32-ble-scan-example-works-but-devices-found-is-always-0/876703    
     for (unsigned i=0; i< foundDevices.getCount(); i++) {
-        for (unsigned n = 0; n < NO_OF_SENSORS; n++) {
-            
-            #ifdef DEBUG
-                Serial.printf("Device Address: %s\n", foundDevices.getDevice(i).getAddress().toString().c_str());
-                Serial.printf("Comp.  Address: %s\n", BLEAddress(knownBLEAddresses[n]).toString().c_str());
-            #endif
-            if (foundDevices.getDevice(i).getAddress() == BLEAddress(knownBLEAddresses[n])) {
-
+        // Skip devices with wrong ServiceDataUUID
+        if (!BLEUUID((uint16_t)0x181a).equals(foundDevices.getDevice(i).getServiceDataUUID()))
+            continue;
+        
+        // Match all devices found against list of known sensors
+        for (unsigned n = 0; n < _known_sensors.size(); n++) {
+            DEBUG_PRINT("Found: ");
+            DEBUG_PRINT(foundDevices.getDevice(i).getAddress().toString().c_str());
+            DEBUG_PRINT(" comparing to: ");
+            DEBUG_PRINT(BLEAddress(_known_sensors[n]).toString().c_str());
+            if (foundDevices.getDevice(i).getAddress() == BLEAddress(_known_sensors[n])) {
+                DEBUG_PRINT(" -> Match! Index: ");
+                DEBUG_PRINTLN(n);
                 data[n].valid = true;
             
                 // Temperature
@@ -148,6 +159,8 @@ unsigned ATC_MiThermometer::getData(uint32_t duration) {
             
                 // Received Signal Strength Indicator [dBm]
                 data[n].rssi = foundDevices.getDevice(i).getRSSI();
+            } else {
+                DEBUG_PRINTLN();
             }
         }
     }
@@ -158,8 +171,7 @@ unsigned ATC_MiThermometer::getData(uint32_t duration) {
 // Set all array members invalid
 void ATC_MiThermometer::resetData(void)
 {
-    for (int i=0; i < NO_OF_SENSORS; i++) {
+    for (int i=0; i < _known_sensors.size(); i++) {
         data[i].valid = false;
     }
 }
-

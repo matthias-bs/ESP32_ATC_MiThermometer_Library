@@ -1,8 +1,8 @@
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 // ATC_MiThermometer.h
 //
-// Bresser 5-in-1/6-in-1 868 MHz Weather Sensor Radio Receiver 
-// based on CC1101 or SX1276/RFM95W and ESP32/ESP8266
+// Bluetooth low energy thermometer/hygrometer sensor library for ESP32.
+// For sensors running ATC_MiThermometer firmware (see https://github.com/pvvx/ATC_MiThermometer)
 //
 // https://github.com/matthias-bs/ESP32_ATC_MiThermometer_Library
 //
@@ -42,7 +42,7 @@
 // 20220527 Changed to a class/into a library
 //
 // ToDo: 
-// - Pass list of known sensor's addresses to object
+// -
 //
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -50,19 +50,23 @@
 #ifndef ATC_MiThermometer_h
 #define ATC_MiThermometer_h
 
-//#define DEBUG
+//#define ATC_MiThermometer_DEBUG
 #include <Arduino.h>
 #include <BLEDevice.h>
 #include <BLEUtils.h>
 #include <BLEScan.h>
 #include <BLEAdvertisedDevice.h>
-//#include <string>
 
-// No. of known sensors
-#define NO_OF_SENSORS 2
 
-// BLE adresses of known sensors 
-const std::string knownBLEAddresses[] = {"a4:c1:38:b8:1f:7f", "a4:c1:38:bf:e1:bc"};
+#ifdef ATC_MiThermometer_DEBUG
+    #define DEBUG_PORT Serial
+    #define DEBUG_PRINT(...) { DEBUG_PORT.print(__VA_ARGS__); }
+    #define DEBUG_PRINTLN(...) { DEBUG_PORT.println(__VA_ARGS__); }
+#else
+    #define DEBUG_PRINT(...) {}
+    #define DEBUG_PRINTLN(...) {}
+#endif
+
 
 // MiThermometer data struct / type
 struct MiThData_S {
@@ -87,8 +91,9 @@ class ATC_MiThermometer {
         /*!
         \brief Constructor.
         */
-        ATC_MiThermometer(/*const std::string known_sensors[]*/) {
-            //_known_sensors = known_sensors;
+        ATC_MiThermometer(std::vector<std::string> known_sensors) {
+            _known_sensors = known_sensors;
+            data.resize(known_sensors.size());
         };
 
         /*!
@@ -120,10 +125,10 @@ class ATC_MiThermometer {
         /*!
         \brief Sensor data.
         */
-        MiThData_t data[NO_OF_SENSORS];
-
-protected:
-    //const std::string _known_sensors = known_sensors;
-    BLEScan*    _pBLEScan;
+        std::vector<MiThData_t>  data;
+        
+    protected:
+        std::vector<std::string> _known_sensors;
+        BLEScan*                 _pBLEScan;
 };
 #endif
