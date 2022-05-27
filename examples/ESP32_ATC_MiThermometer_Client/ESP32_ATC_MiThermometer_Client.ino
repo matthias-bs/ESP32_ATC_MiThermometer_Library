@@ -1,8 +1,8 @@
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 // ATC_MiThermometer_Client.cpp
 //
-// Bresser 5-in-1/6-in-1 868 MHz Weather Sensor Radio Receiver 
-// based on CC1101 or SX1276/RFM95W and ESP32/ESP8266
+// Bluetooth low energy thermometer/hygrometer sensor client for ESP32.
+// For sensors running ATC_MiThermometer firmware (see https://github.com/pvvx/ATC_MiThermometer)
 //
 // https://github.com/matthias-bs/ESP32_ATC_MiThermometer_Library
 //
@@ -42,7 +42,7 @@
 // 20220527 Changed to a class/into a library
 //
 // ToDo: 
-// - Pass list of known sensor's addresses to object
+// -
 //
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -50,7 +50,10 @@
 
 const int scanTime = 5; // BLE scan time in seconds
 
-ATC_MiThermometer miThermometer;
+// List of known sensors' BLE addresses
+std::vector<std::string> knownBLEAddresses = {"a4:c1:38:b8:1f:7f", "a4:c1:38:bf:e1:bc"};
+
+ATC_MiThermometer miThermometer(knownBLEAddresses);
 
 
 void setup() {
@@ -67,7 +70,7 @@ void loop() {
     // Get sensor data - run BLE scan for <scanTime>
     unsigned found = miThermometer.getData(scanTime);
 
-    for (int i=0; i < NO_OF_SENSORS; i++) {  
+    for (int i=0; i < miThermometer.data.size(); i++) {  
         if (miThermometer.data[i].valid) {
             Serial.println();
             Serial.printf("Sensor%d:\n", i);
