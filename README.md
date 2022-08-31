@@ -1,3 +1,4 @@
+[![Build Status](https://app.travis-ci.com/matthias-bs/ESP32_ATC_MiThermometer_Library.svg?branch=main)](https://app.travis-ci.com/matthias-bs/ESP32_ATC_MiThermometer_Library)
 # ESP32_ATC_MiThermometer_Library
 ESP32 BLE Client Library for receiving ATC_MiThermometer Data (as Advertising Data)
 
