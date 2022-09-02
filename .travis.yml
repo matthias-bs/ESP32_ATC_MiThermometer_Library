@@ -15,11 +15,11 @@ script:
    - bundle exec arduino_ci_remote.rb
    - doxygen doc/Doxyfile
 deploy:
-  provider: pages
-  skip-cleanup: true
-  github-token: $GITHUB_TOKEN
-  keep-history: false
-  local-dir: doc/html
-  verbose: true
-  on:
-    branch: master
+  #provider: pages
+  #skip-cleanup: true
+  #github-token: $GITHUB_TOKEN
+  #keep-history: false
+  #local-dir: doc/html
+  #verbose: true
+  #on:
+  #  branch: master
