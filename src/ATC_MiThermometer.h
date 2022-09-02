@@ -124,7 +124,6 @@ class ATC_MiThermometer {
         /*!
          * \brief Set sensor data invalid.
          *
-         * \param duration Scan duration in seconds
          */                        
         void resetData(void);
         

@@ -49,7 +49,11 @@
 #include "ATC_MiThermometer.h"
 
 
-// Callback for advertised device found during scan
+/*!
+ * \class MyAdvertisedDeviceCallbacks
+ * 
+ * \brief Callback for advertised device found during scan
+ *\
 class MyAdvertisedDeviceCallbacks: public BLEAdvertisedDeviceCallbacks {
     void onResult(BLEAdvertisedDevice advertisedDevice)
     {      
