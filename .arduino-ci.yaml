@@ -1,9 +1,0 @@
-compile:
-  libraries: ~
-  platforms:
-    - esp32
-
-unittest:
-  libraries: ~
-  platforms:
-    - esp32
