@@ -73,7 +73,7 @@ void loop() {
     for (int i=0; i < miThermometer.data.size(); i++) {  
         if (miThermometer.data[i].valid) {
             Serial.println();
-            Serial.printf("Sensor%d:\n", i);
+            Serial.printf("Sensor %d: %s\n", i, knownBLEAddresses[i].c_str());
             Serial.printf("%.2f°C\n", miThermometer.data[i].temperature/100.0);
             Serial.printf("%.2f%%\n", miThermometer.data[i].humidity/100.0);
             Serial.printf("%.3fV\n",  miThermometer.data[i].batt_voltage/1000.0);
