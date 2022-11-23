@@ -1,4 +1,9 @@
-
+> :warning: This repository is deprecated and no longer maintained. 
+> The recommended alternative is [ATC_MiThermometer](https://github.com/matthias-bs/ATC_MiThermometer)
+> which inherits many benefits from using [NimBLE-Arduino](https://github.com/h2zero/NimBLE-Arduino) instead of
+> [ESP32 BLE for Arduino (aka Bluedroid)](https://github.com/espressif/arduino-esp32/tree/master/libraries/BLE).
+> [ATC_MiThermometer](https://github.com/matthias-bs/ATC_MiThermometer) can be used as a direct replacement
+> without any changes of the sketch.
 # ESP32_ATC_MiThermometer_Library
 
 [![Build Status](https://app.travis-ci.com/matthias-bs/ESP32_ATC_MiThermometer_Library.svg?branch=main)](https://app.travis-ci.com/matthias-bs/ESP32_ATC_MiThermometer_Library)
